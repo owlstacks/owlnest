@@ -1,0 +1,19 @@
+# Environment
+.env
+
+# WordPress files (managed by Docker volume)
+wp-content/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
