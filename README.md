@@ -1,7 +1,9 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker Compose">
   <img src="https://img.shields.io/badge/WordPress-latest-21759B?logo=wordpress&logoColor=white" alt="WordPress">
-  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white" alt="MySQL">
+  <img src="https://img.shields.io/badge/PHP--FPM-8.3-777BB4?logo=php&logoColor=white" alt="PHP-FPM">
+  <img src="https://img.shields.io/badge/Nginx-stable-009639?logo=nginx&logoColor=white" alt="Nginx">
+  <img src="https://img.shields.io/badge/MariaDB-11-003545?logo=mariadb&logoColor=white" alt="MariaDB">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
 </p>
 
@@ -9,7 +11,7 @@
 
 **The testing nest for all OwlStack WordPress plugins.**
 
-A Docker Compose environment purpose-built for testing [OwlStack](https://github.com/owlstack) WordPress plugins. Spin up a fresh WordPress instance with MySQL and phpMyAdmin in one command, install your plugins, and start testing.
+A Docker Compose environment purpose-built for testing [OwlStack](https://github.com/owlstack) WordPress plugins. Uses a production-grade stack with PHP-FPM, Nginx, and MariaDB. Spin up a fresh WordPress instance in one command, install your plugins, and start testing.
 
 ---
 
@@ -17,8 +19,9 @@ A Docker Compose environment purpose-built for testing [OwlStack](https://github
 
 | Service | Port | Description |
 |---|---|---|
-| **WordPress** | `8080` | Fresh WordPress instance ready for plugin testing |
-| **MySQL 8.0** | `3306` (internal) | Database with health checks |
+| **PHP-FPM 8.3** | `9000` (internal) | WordPress running on PHP-FPM with WP-CLI |
+| **Nginx** | `8080` | Reverse proxy serving WordPress |
+| **MariaDB 11** | `3306` (internal) | Database with health checks |
 | **phpMyAdmin** | `8081` | Visual database management |
 
 ## Quick Start
@@ -57,7 +60,7 @@ Visit [http://localhost:8080](http://localhost:8080) and complete the installati
 Once WordPress is running, install any OwlStack WordPress plugin via the admin dashboard (**Plugins → Add New → Upload Plugin**) or by copying plugin files into the container:
 
 ```bash
-docker compose cp /path/to/owlstack-plugin wordpress:/var/www/html/wp-content/plugins/
+docker compose cp /path/to/owlstack-plugin php:/var/www/html/wp-content/plugins/
 ```
 
 Then activate the plugin from the WordPress admin panel.
@@ -70,13 +73,13 @@ All settings are controlled via the `.env` file:
 
 | Variable | Default | Description |
 |---|---|---|
-| `WORDPRESS_VERSION` | `latest` | WordPress Docker image tag |
 | `WORDPRESS_PORT` | `8080` | Host port for WordPress |
-| `MYSQL_VERSION` | `8.0` | MySQL Docker image tag |
-| `MYSQL_DATABASE` | `wordpress` | Database name |
-| `MYSQL_USER` | `wordpress` | Database user |
-| `MYSQL_PASSWORD` | `wordpress` | Database password |
-| `MYSQL_ROOT_PASSWORD` | `rootpassword` | MySQL root password |
+| `NGINX_VERSION` | `stable-alpine` | Nginx Docker image tag |
+| `MARIADB_VERSION` | `11` | MariaDB Docker image tag |
+| `DB_NAME` | `wordpress` | Database name |
+| `DB_USER` | `wordpress` | Database user |
+| `DB_PASSWORD` | `wordpress` | Database password |
+| `DB_ROOT_PASSWORD` | `rootpassword` | MariaDB root password |
 | `PHPMYADMIN_VERSION` | `latest` | phpMyAdmin Docker image tag |
 | `PHPMYADMIN_PORT` | `8081` | Host port for phpMyAdmin |
 
@@ -98,19 +101,23 @@ docker compose down -v
 docker compose logs -f
 
 # View logs for a specific service
-docker compose logs -f wordpress
+docker compose logs -f php
+docker compose logs -f nginx
 
 # Restart a service
-docker compose restart wordpress
+docker compose restart php
 
-# Access WordPress container shell
-docker compose exec wordpress bash
+# Access PHP container shell
+docker compose exec php sh
 
-# Access MySQL CLI
-docker compose exec db mysql -u wordpress -p wordpress
+# Use WP-CLI
+docker compose exec php wp --allow-root plugin list
+
+# Access MariaDB CLI
+docker compose exec db mariadb -u wordpress -p wordpress
 
 # Copy a plugin into the WordPress container
-docker compose cp ./my-plugin wordpress:/var/www/html/wp-content/plugins/
+docker compose cp ./my-plugin php:/var/www/html/wp-content/plugins/
 ```
 
 ## Testing Workflow
@@ -123,7 +130,7 @@ docker compose cp ./my-plugin wordpress:/var/www/html/wp-content/plugins/
 
 ## Data Persistence
 
-WordPress files and MySQL data are stored in Docker named volumes (`wordpress_data` and `db_data`). Your data persists across restarts. To completely reset for a fresh test:
+WordPress files and MariaDB data are stored in Docker named volumes (`wordpress_data` and `db_data`). Your data persists across restarts. To completely reset for a fresh test:
 
 ```bash
 docker compose down -v
