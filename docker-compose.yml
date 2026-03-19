@@ -13,7 +13,7 @@ services:
     volumes:
       - wordpress_data:/var/www/html
       - ./php.ini:/usr/local/etc/php/conf.d/custom.ini
-      - ../owlstack-wp:/var/www/html/wp-content/plugins/owlstack
+      - ../owlstack-wp:/var/www/html/wp-content/plugins/owlstack:ro
     depends_on:
       db:
         condition: service_healthy
